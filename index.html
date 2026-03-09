@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MindBloom | Elite Cognitive Consulting & Bio-Sync</title>
+  
+  <!-- Premium External Modules -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    :root {
+      --bg-deep: #0a0514;
+      --bg-panel: rgba(15, 10, 28, 0.85);
+      --royal-purple: #8b5cf6;
+      --electric-purple: #a855f7;
+      --sterling-silver: #cbd5e1;
+      --silver-metallic: linear-gradient(135deg, #ffffff 0%, #94a3b8 50%, #f1f5f9 100%);
+      --border-glow: rgba(168, 85, 247, 0.3);
+      --radius-premium: 40px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      color: #f8fafc;
+      background: radial-gradient(circle at 50% 0%, #1e1135 0%, var(--bg-deep) 85%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .silver-text {
+      background: var(--silver-metallic);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .nebula {
+      position: fixed; border-radius: 50%; filter: blur(130px); pointer-events: none; z-index: 0; opacity: 0.4;
+    }
+    .nebula-1 { width: 600px; height: 600px; left: -200px; top: -100px; background: var(--royal-purple); animation: drift 30s infinite; }
+    .nebula-2 { width: 500px; height: 500px; right: -150px; bottom: 100px; background: #4f46e5; animation: drift 25s infinite reverse; }
+
+    @keyframes drift {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(60px, -40px) scale(1.1); }
+    }
+
+    .wrap { width: min(1360px, calc(100% - 40px)); margin: 0 auto; position: relative; z-index: 1; }
+
+    .topbar {
+      position: sticky; top: 16px; z-index: 1000; padding: 14px 35px; margin: 20px auto;
+      backdrop-filter: blur(40px); background: rgba(10, 5, 20, 0.8); 
+      border: 1px solid var(--border-glow); border-radius: 999px;
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 15px 45px rgba(0,0,0,0.5);
+    }
+
+    #biosphere-viewport {
+      width: 100%; height: 600px; border-radius: var(--radius-premium);
+      background: radial-gradient(circle at center, rgba(139, 92, 246, 0.15) 0%, transparent 85%);
+      position: relative; overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .premium-card {
+      background: var(--bg-panel); border: 1px solid var(--border-glow);
+      backdrop-filter: blur(50px); border-radius: var(--radius-premium); padding: 45px;
+      box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.7);
+      transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .premium-card:hover { border-color: var(--sterling-silver); transform: translateY(-5px); }
+
+    .btn-clinical {
+      background: linear-gradient(135deg, var(--royal-purple), var(--electric-purple));
+      color: white; padding: 18px 36px; border-radius: 999px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 2px; font-size: 0.75rem;
+      transition: 0.4s; cursor: pointer; box-shadow: 0 15px 35px rgba(139, 92, 246, 0.35);
+    }
+    .btn-clinical:hover { transform: scale(1.05); box-shadow: 0 20px 50px rgba(139, 92, 246, 0.5); }
+
+    .filter-chip {
+      padding: 12px 24px; border-radius: 999px; background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1); font-size: 0.75rem; font-weight: 800;
+      text-transform: uppercase; cursor: pointer; transition: 0.3s; color: var(--sterling-silver);
+    }
+    .filter-chip.active { background: white; color: var(--bg-deep); border-color: white; box-shadow: 0 0 25px rgba(255,255,255,0.3); }
+
+    #chat-log { height: 420px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; padding-right: 15px; }
+    .bubble { max-width: 80%; padding: 18px 24px; border-radius: 28px; font-size: 0.95rem; line-height: 1.6; }
+    .bubble-bot { background: rgba(255,255,255,0.07); border-left: 5px solid var(--royal-purple); align-self: flex-start; }
+    .bubble-user { background: var(--royal-purple); align-self: flex-end; color: white; border-bottom-right-radius: 4px; box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3); }
+
+    .scroll-indicator { position: fixed; top: 0; left: 0; height: 5px; background: linear-gradient(90deg, var(--royal-purple), #fff); z-index: 2000; width: 0%; }
+    .mood-selector {
+      width: 55px; height: 55px; border-radius: 18px; background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; transition: 0.4s; cursor: pointer;
+    }
+    .mood-selector:hover { background: rgba(255,255,255,0.1); transform: scale(1.1); border-color: var(--sterling-silver); }
+
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--royal-purple); border-radius: 10px; }
+
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8); backdrop-filter: blur(15px);
+      z-index: 6000; display: none; align-items: center; justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-content {
+      background: var(--bg-panel); border: 1px solid var(--border-glow);
+      padding: 50px; border-radius: var(--radius-premium); max-width: 500px; width: 90%;
+      text-align: center;
+    }
+
+    input, select, textarea {
+      width: 100%; padding: 16px 20px; border-radius: 20px;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      color: white; outline: none; transition: 0.3s;
+    }
+    input:focus, select:focus { border-color: var(--royal-purple); }
+
+    .therapy-card {
+      padding: 20px; border-radius: 25px; background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08); transition: 0.3s; cursor: pointer;
+    }
+    .therapy-card.active { border-color: var(--royal-purple); background: rgba(139, 92, 246, 0.1); }
+  </style>
+</head>
+<body>
+  <div class="scroll-indicator" id="scrollBar"></div>
+  <div class="nebula nebula-1"></div>
+  <div class="nebula nebula-2"></div>
+
+  <!-- Sync Modal -->
+  <div id="syncModal" class="modal-overlay" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <h2 class="text-4xl font-black italic silver-text mb-6">Neural Sync Portal</h2>
+      <p class="text-slate-400 mb-8 font-bold">Access your secure clinical telemetry and historical sync logs.</p>
+      <input id="userIdInput" type="text" placeholder="Neural ID (e.g. CLIENT-702)" class="mb-6 font-bold text-center">
+      <button onclick="saveSyncId()" class="btn-clinical w-full">Authorize Access</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <!-- Header -->
+    <header class="topbar">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 bg-gradient-to-br from-purple-600 to-indigo-800 rounded-2xl flex items-center justify-center shadow-2xl border border-white/20">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M12 2v20M2 12h20"/></svg>
+        </div>
+        <span class="text-2xl font-black tracking-tighter silver-text uppercase">MindBloom</span>
+      </div>
+      <nav class="hidden lg:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-50">
+        <a href="#workspace" class="hover:text-purple-400 hover:opacity-100 transition">Workspace</a>
+        <a href="#specialists" class="hover:text-purple-400 hover:opacity-100 transition">Specialists</a>
+        <a href="#neuro-acoustic" class="hover:text-purple-400 hover:opacity-100 transition">Acoustics</a>
+        <a href="#booking" class="hover:text-purple-400 hover:opacity-100 transition">Reserve</a>
+      </nav>
+      <button onclick="openModal()" class="btn-clinical"><span id="nav-sync-text">Sync ID</span></button>
+    </header>
+
+    <!-- Bio-Sync Workspace -->
+    <section id="workspace" class="pt-16 pb-28">
+      <div class="max-w-4xl mx-auto text-center mb-24">
+        <span class="text-purple-400 font-black text-xs uppercase tracking-[0.5em] mb-6 block">Unified Clinical Architecture</span>
+        <h1 class="text-7xl lg:text-9xl font-black italic tracking-tighter mb-10 leading-none silver-text">Bio-Sync Resonance.</h1>
+        <p class="text-slate-400 text-2xl leading-relaxed font-medium">Synchronize your cognitive flow with our advanced physiological resonance environment.</p>
+      </div>
+
+      <div class="grid lg:grid-cols-12 gap-10">
+        <div class="lg:col-span-8 premium-card relative overflow-hidden group">
+          <div class="absolute top-12 left-12 z-10">
+            <h2 class="text-4xl font-black italic silver-text tracking-tighter mb-3">Neural BioSphere</h2>
+            <div class="flex items-center gap-3">
+              <span class="w-3 h-3 rounded-full bg-green-500 animate-pulse"></span>
+              <span class="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">Live Telemetry: Synchronized</span>
+            </div>
+          </div>
+          
+          <div id="biosphere-viewport"></div>
+          
+          <div class="absolute bottom-12 right-12 z-10 flex items-center gap-12 bg-black/80 backdrop-blur-3xl p-12 rounded-[3.5rem] border border-white/10 shadow-[0_50px_100px_rgba(0,0,0,0.8)]">
+            <div id="breath-label" class="text-6xl font-black text-purple-400 w-56 tracking-tighter uppercase italic transition-all duration-1000">...</div>
+            <div class="w-24 h-24 rounded-full border-4 border-purple-500/20 flex items-center justify-center bg-white/5 shadow-inner">
+                <span id="breath-timer" class="text-4xl font-black silver-text">4s</span>
+            </div>
+          </div>
+
+          <div id="worry-hint" class="hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white text-black px-8 py-4 rounded-full font-black uppercase text-[10px] tracking-widest animate-pulse z-20">Drag Stone to Discard</div>
+        </div>
+
+        <div class="lg:col-span-4 flex flex-col gap-10">
+          <div class="premium-card">
+            <h3 class="text-[11px] font-black uppercase tracking-[0.4em] opacity-40 mb-10 flex justify-between">
+              Mood Baseline <span id="streak-count" class="text-green-400">0 Day Streak</span>
+            </h3>
+            <div class="flex justify-between mb-12">
+              <button onclick="logMood(1)" class="mood-selector">😔</button>
+              <button onclick="logMood(2)" class="mood-selector">😐</button>
+              <button onclick="logMood(3)" class="mood-selector">😌</button>
+              <button onclick="logMood(4)" class="mood-selector">😊</button>
+              <button onclick="logMood(5)" class="mood-selector">🔥</button>
+            </div>
+            <div class="h-48 w-full"><canvas id="moodGraph"></canvas></div>
+          </div>
+
+          <div class="premium-card flex-1">
+            <h3 class="text-[11px] font-black uppercase tracking-[0.4em] opacity-40 mb-8">Clinical Protocol</h3>
+            <div class="space-y-5">
+              <button onclick="changeMode('breathing')" class="w-full py-6 bg-purple-600 rounded-[2rem] text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl hover:bg-purple-500 transition-all">Resonance Mode</button>
+              <button onclick="changeMode('somatic')" class="w-full py-6 bg-white/5 border border-white/10 rounded-[2rem] text-[11px] font-black uppercase tracking-[0.2em] silver-text hover:bg-white/10 transition-all">Somatic Discard</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Neuro-Acoustics -->
+    <section id="neuro-acoustic" class="py-24 border-t border-white/5">
+      <div class="grid lg:grid-cols-2 gap-16">
+        <div class="premium-card">
+          <h2 class="text-5xl font-black italic tracking-tighter mb-10 silver-text uppercase">Neuro-Acoustics</h2>
+          <p class="text-slate-400 mb-10 font-bold">Select a frequency profile to modulate your current cognitive state.</p>
+          
+          <div class="grid grid-cols-2 gap-5 mb-10">
+            <div onclick="selectAcoustic('meditation', 'Alpha Flow')" class="therapy-card active" id="acoustic-meditation">
+              <h4 class="font-bold mb-1">Alpha Flow</h4>
+              <p class="text-[10px] opacity-50 uppercase font-black">Deep Meditation</p>
+            </div>
+            <div onclick="selectAcoustic('focus', 'Gamma Clarity')" class="therapy-card" id="acoustic-focus">
+              <h4 class="font-bold mb-1">Gamma Clarity</h4>
+              <p class="text-[10px] opacity-50 uppercase font-black">Peak Concentration</p>
+            </div>
+            <div onclick="selectAcoustic('rain', 'Delta Rest')" class="therapy-card" id="acoustic-rain">
+              <h4 class="font-bold mb-1">Delta Rest</h4>
+              <p class="text-[10px] opacity-50 uppercase font-black">Sleep Architecture</p>
+            </div>
+            <div onclick="selectAcoustic('ocean', 'Theta Drift')" class="therapy-card" id="acoustic-ocean">
+              <h4 class="font-bold mb-1">Theta Drift</h4>
+              <p class="text-[10px] opacity-50 uppercase font-black">Stress Release</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-6 bg-white/5 p-6 rounded-3xl">
+            <button id="audioToggle" onclick="toggleAudio()" class="w-16 h-16 rounded-full bg-purple-600 flex items-center justify-center shadow-xl">
+              <svg id="playIcon" width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
+            </button>
+            <div>
+              <p class="text-[10px] font-black uppercase opacity-40 mb-1">Now Modulating</p>
+              <h4 id="nowPlayingText" class="text-xl font-bold silver-text">Alpha Flow</h4>
+            </div>
+            <div class="ml-auto flex flex-col gap-2">
+              <input type="range" id="volumeControl" class="w-24" value="50">
+            </div>
+          </div>
+        </div>
+
+        <!-- Kinetic Tutor -->
+        <div class="premium-card flex flex-col">
+          <h2 class="text-5xl font-black italic tracking-tighter mb-10 silver-text uppercase">Kinetic Tutor</h2>
+          <div id="kinetic-loader" class="hidden absolute inset-0 bg-black/60 backdrop-blur-md z-30 flex items-center justify-center rounded-[radius-premium]">
+            <div class="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+          <p class="text-slate-400 mb-8 font-bold">State your somatic tension locus for an AI-architected recovery protocol.</p>
+          <div class="flex gap-4 mb-8">
+            <input id="kinetic-input" type="text" placeholder="e.g. Lower back and shoulders..." class="flex-1 font-bold">
+            <button onclick="architectProtocol()" class="btn-clinical">Architect</button>
+          </div>
+          <div id="kinetic-result" class="flex-1 overflow-y-auto bg-white/5 p-8 rounded-3xl border border-white/10 font-bold text-sm leading-relaxed text-slate-300">
+            Awaiting input for neural-movement synthesis...
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Consultants Hub -->
+    <section id="specialists" class="py-24 border-t border-white/5">
+      <div class="grid lg:grid-cols-2 gap-16">
+        <div class="premium-card">
+          <h2 class="text-5xl font-black italic tracking-tighter mb-12 silver-text uppercase">Consultants</h2>
+          <div class="space-y-12">
+            <div>
+              <label class="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 mb-6 block">Designation</label>
+              <div class="flex flex-wrap gap-4">
+                <button onclick="setFilter('type','Psychologist',this)" class="filter-chip active">Psychologist</button>
+                <button onclick="setFilter('type','Psychiatrist',this)" class="filter-chip">Psychiatrist</button>
+                <button onclick="setFilter('type','Coach',this)" class="filter-chip">Executive Coach</button>
+              </div>
+            </div>
+            <div>
+              <label class="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 mb-6 block">Investment (฿)</label>
+              <div class="grid grid-cols-2 gap-5">
+                <button onclick="setFilter('price','1,500฿ - 2,500฿',this)" class="filter-chip active py-5">Standard</button>
+                <button onclick="setFilter('price','3,500฿+',this)" class="filter-chip py-5">Executive</button>
+              </div>
+            </div>
+          </div>
+          <div id="specialist-container" class="mt-16 space-y-6 max-h-[500px] overflow-y-auto pr-4 custom-scrollbar"></div>
+        </div>
+
+        <div id="assistant" class="flex flex-col">
+          <div class="premium-card flex-1 flex flex-col">
+            <h2 class="text-5xl font-black italic tracking-tighter mb-12 silver-text uppercase">Neural Assistant</h2>
+            <div id="chat-log" class="custom-scrollbar mb-10 flex-1">
+              <div class="bubble bubble-bot">"Neural Link Established. State your cognitive intent for analysis."</div>
+            </div>
+            <div class="flex gap-4 bg-white/5 p-4 rounded-[3rem] border border-white/10 shadow-2xl">
+              <input id="user-input" type="text" placeholder="State cognitive intent..." class="flex-1 bg-transparent px-8 py-5 outline-none font-bold text-slate-200 text-lg">
+              <button onclick="sendAI()" class="btn-clinical px-14">Analyze</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Booking & Reserve -->
+    <section id="booking" class="py-24 border-t border-white/5">
+      <div class="grid lg:grid-cols-2 gap-16">
+        <div class="premium-card">
+          <h2 class="text-5xl font-black italic tracking-tighter mb-12 silver-text uppercase">Reserve Session</h2>
+          <form id="bookingForm" class="space-y-6">
+            <div class="grid grid-cols-2 gap-4">
+              <input type="text" id="book-name" placeholder="Full Name" required>
+              <input type="email" id="book-email" placeholder="Email Address" required>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <select id="book-type" required>
+                <option value="">Therapy Category</option>
+                <option>Clinical Psychologist</option>
+                <option>Executive Performance Coach</option>
+                <option>Psychiatric Consultation</option>
+              </select>
+              <input type="date" id="book-date" required>
+            </div>
+            <textarea id="book-goal" placeholder="State your clinical objective..." class="h-32"></textarea>
+            <button type="submit" class="btn-clinical w-full">Confirm Authorization</button>
+          </form>
+        </div>
+
+        <div class="premium-card">
+          <h2 class="text-5xl font-black italic tracking-tighter mb-12 silver-text uppercase">Wellness Hub</h2>
+          <div class="space-y-8">
+            <div class="bg-white/5 p-8 rounded-3xl border border-white/10">
+              <h4 class="text-xs font-black uppercase tracking-widest opacity-40 mb-4">Daily Affirmation</h4>
+              <p id="affirmation-txt" class="text-xl font-bold silver-text italic mb-6">"Internal stability is the foundation of cognitive peak."</p>
+              <button onclick="newAffirmation()" class="text-[10px] font-black uppercase tracking-widest text-purple-400">Request New Sync</button>
+            </div>
+            <div class="grid grid-cols-1 gap-5">
+              <div class="flex items-center gap-5 p-6 bg-white/5 rounded-2xl border border-white/10">
+                <div class="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center text-green-400">01</div>
+                <div><h5 class="font-bold">4-4-6 Breath Protocol</h5><p class="text-xs opacity-50">Inhale 4, Hold 4, Exhale 6.</p></div>
+              </div>
+              <div class="flex items-center gap-5 p-6 bg-white/5 rounded-2xl border border-white/10">
+                <div class="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400">02</div>
+                <div><h5 class="font-bold">Senses Grounding</h5><p class="text-xs opacity-50">Identify 5 somatic sensations.</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="py-32 text-center opacity-30 text-[11px] font-black uppercase tracking-[1em] silver-text">
+      MindBloom Unified clinical architecture • established 2026
+    </footer>
+  </div>
+
+  <div id="toast" class="fixed top-14 left-1/2 -translate-x-1/2 -translate-y-48 bg-white text-black px-14 py-7 rounded-full z-[5000] font-black uppercase text-xs tracking-[0.3em] transition-transform duration-1000 shadow-2xl">Message Received</div>
+
+  <script>
+    const specialists = [
+      { id: 1, name: "Dr. Arisara K.", type: "Psychiatrist", price: "3,500฿+", bio: "Specialist in mindfulness-based psychiatric interventions." },
+      { id: 2, name: "Liam Henderson", type: "Psychologist", price: "1,500฿ - 2,500฿", bio: "Occupational stress lead focusing on recovery." },
+      { id: 3, name: "Sofia Rodriguez", type: "Coach", price: "1,500 - 2,500฿", bio: "Somatic resilience training for executives." },
+      { id: 4, name: "Dr. Kenji Sato", type: "Psychiatrist", price: "3,500฿+", bio: "Neurological architect for peak flow states." },
+      { id: 5, name: "Aria Thorne", type: "Psychologist", price: "1,500 - 2,500฿", bio: "EMDR and somatic processing specialist." }
+    ];
+
+    let moodHistory = JSON.parse(localStorage.getItem('mb_mood')) || [4, 3, 5, 4, 3, 4, 3];
+    let streakValue = parseInt(localStorage.getItem('mb_streak')) || 0;
+    let activeFilters = { type: 'Psychologist', price: '1,500฿ - 2,500฿' };
+
+    let scene, camera, renderer, masterGroup, bioSphere, auraField, particleMist;
+    let labMode = 'breathing', isDragging = false, mouse = new THREE.Vector2();
+    let currentScale = 1.0;
+    let phase = 0, countdown = 4;
+    const phases = [
+      { t: "Inhale", c: "#a855f7", s: 1.7 },
+      { t: "Hold", c: "#f8fafc", s: 1.7 },
+      { t: "Exhale", c: "#6366f1", s: 0.85 },
+      { t: "Hold", c: "#64748b", s: 0.85 }
+    ];
+
+    function init3D() {
+      const vp = document.getElementById('biosphere-viewport');
+      if (vp.clientWidth === 0) { setTimeout(init3D, 100); return; }
+
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(50, vp.clientWidth / vp.clientHeight, 0.1, 1000);
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(vp.clientWidth, vp.clientHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      vp.appendChild(renderer.domElement);
+      camera.position.z = 25;
+      scene.add(new THREE.AmbientLight(0xffffff, 1.8));
+      const light = new THREE.PointLight(0x8b5cf6, 40);
+      light.position.set(15, 15, 15);
+      scene.add(light);
+      masterGroup = new THREE.Group();
+      scene.add(masterGroup);
+      buildBioSphere();
+      
+      vp.addEventListener('mousedown', () => { if(labMode === 'somatic') isDragging = true; });
+      vp.addEventListener('mousemove', (e) => {
+        const r = renderer.domElement.getBoundingClientRect();
+        mouse.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+        mouse.y = -((e.clientY - r.top) / r.height) * 2 + 1;
+        if(isDragging && masterGroup) {
+          masterGroup.position.x = mouse.x * 12; masterGroup.position.y = mouse.y * 8;
+        }
+      });
+      window.addEventListener('mouseup', () => { if(isDragging) { isDragging = false; discardStone(); } });
+      animate();
+    }
+
+    function buildBioSphere() {
+      masterGroup.clear();
+      bioSphere = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(7.5, 4), 
+        new THREE.MeshStandardMaterial({ color: 0x8b5cf6, emissive: 0xa855f7, emissiveIntensity: 3.5, wireframe: true, transparent: true, opacity: 1 })
+      );
+      masterGroup.add(bioSphere);
+      
+      auraField = new THREE.Mesh(
+        new THREE.SphereGeometry(10, 32, 32),
+        new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xe2e8f0, emissiveIntensity: 1.0, wireframe: true, transparent: true, opacity: 0.1 })
+      );
+      masterGroup.add(auraField);
+
+      const pC = window.innerWidth < 768 ? 1500 : 4000;
+      const pos = new Float32Array(pC * 3);
+      for(let i=0; i<pC; i++){
+        const i3 = i*3, r = 10 + Math.random()*10, th = Math.random()*Math.PI*2, ph = Math.acos(2*Math.random()-1);
+        pos[i3] = r*Math.sin(ph)*Math.cos(th); pos[i3+1] = r*Math.sin(ph)*Math.sin(th); pos[i3+2] = r*Math.cos(ph);
+      }
+      const geom = new THREE.BufferGeometry(); geom.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      particleMist = new THREE.Points(geom, new THREE.PointsMaterial({ color: 0xffffff, size: 0.08, transparent: true, opacity: 0.4 }));
+      scene.add(particleMist);
+    }
+
+    function buildStone() {
+      masterGroup.clear(); if(particleMist) scene.remove(particleMist);
+      bioSphere = new THREE.Mesh(
+        new THREE.DodecahedronGeometry(6.5, 1), 
+        new THREE.MeshStandardMaterial({ color: 0x0a0514, emissive: 0x8b5cf6, emissiveIntensity: 2.2, metalness: 1, roughness: 0 })
+      );
+      masterGroup.add(bioSphere);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      if(!renderer) return;
+      if(bioSphere) {
+        bioSphere.rotation.y += 0.006;
+        if(labMode === 'breathing') {
+          currentScale += (phases[phase].s - currentScale) * 0.03;
+          masterGroup.scale.set(currentScale, currentScale, currentScale);
+        }
+      }
+      if(auraField) auraField.rotation.z -= 0.002;
+      if(particleMist) particleMist.rotation.y += 0.0006;
+      renderer.render(scene, camera);
+    }
+
+    function discardStone() {
+      let v = 0; const drop = setInterval(() => { v += 0.8; masterGroup.position.y -= v; if(masterGroup.position.y < -60){ clearInterval(drop); masterGroup.position.set(0,0,0); notif("Somatic Stone Discarded"); }}, 30);
+    }
+
+    function notif(m) { const e = document.getElementById('toast'); e.innerText = m; e.style.transform = 'translate(-50%, 0)'; setTimeout(() => e.style.transform = 'translate(-50%, -300px)', 3500); }
+    function changeMode(m) { labMode = m; if(m === 'breathing') buildBioSphere(); else buildStone(); notif(`Protocol: ${m.toUpperCase()}`); document.getElementById('worry-hint').classList.toggle('hidden', m === 'breathing'); }
+    function openModal() { document.getElementById('syncModal').classList.add('active'); }
+    function closeModal() { document.getElementById('syncModal').classList.remove('active'); }
+    function saveSyncId() { const i = document.getElementById('userIdInput').value; if(i){ localStorage.setItem('mb_user_id', i); document.getElementById('nav-sync-text').innerText = i; closeModal(); notif("Neural Sync Established"); }}
+
+    function setFilter(k, v, b) { activeFilters[k] = v; b.parentElement.querySelectorAll('button').forEach(btn => btn.classList.remove('active')); b.classList.add('active'); renderSpecialists(); }
+    function renderSpecialists() {
+      const container = document.getElementById('specialist-container'); container.innerHTML = '';
+      const list = specialists.filter(s => s.type === activeFilters.type && s.price === activeFilters.price);
+      if(!list.length) { container.innerHTML = '<div class="py-10 opacity-20 text-center uppercase font-black text-xs">No Matches</div>'; return; }
+      list.forEach(s => {
+        const card = document.createElement('div'); card.className = "p-10 premium-card";
+        card.innerHTML = `<h4 class="text-2xl font-bold silver-text mb-2">${s.name}</h4><p class="text-xs text-slate-400 mb-6 font-bold">${s.bio}</p><button onclick="notif('Authorization Sent')" class="btn-clinical w-full">Authorize Session</button>`;
+        container.appendChild(card);
+      });
+    }
+
+    let audioCtx, masterGain, activeOsc = [];
+    function selectAcoustic(type, label) {
+      document.querySelectorAll('.therapy-card').forEach(c => c.classList.remove('active'));
+      document.getElementById(`acoustic-${type}`).classList.add('active');
+      document.getElementById('nowPlayingText').innerText = label;
+      if(audioCtx) startAcoustic(type);
+    }
+    function toggleAudio() {
+      if(!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); masterGain = audioCtx.createGain(); masterGain.connect(audioCtx.destination); }
+      if(activeOsc.length) { stopAcoustic(); document.getElementById('playIcon').innerHTML = '<path d="M8 5v14l11-7z"/>'; }
+      else { startAcoustic('meditation'); document.getElementById('playIcon').innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>'; }
+    }
+    function stopAcoustic() { activeOsc.forEach(o => { try{o.stop();}catch(e){} }); activeOsc = []; }
+    function startAcoustic(type) {
+      stopAcoustic();
+      const osc = audioCtx.createOscillator(); osc.type = 'sine';
+      osc.frequency.setValueAtTime(type === 'focus' ? 220 : 110, audioCtx.currentTime);
+      const g = audioCtx.createGain(); g.gain.value = document.getElementById('volumeControl').value / 100;
+      osc.connect(g); g.connect(masterGain); osc.start(); activeOsc.push(osc);
+    }
+
+    async function sendAI() {
+      const i = document.getElementById('user-input'); const l = document.getElementById('chat-log'); if(!i.value) return;
+      const u = document.createElement('div'); u.className = "bubble bubble-user"; u.innerText = i.value; l.appendChild(u);
+      i.value = ""; const b = document.createElement('div'); b.className = "bubble bubble-bot"; b.innerText = "Analyzing..."; l.appendChild(b);
+      setTimeout(() => { b.innerText = "Neural patterns suggest requirement for Alpha Flow acoustics and a 10-minute Bio-Sync cycle."; l.scrollTop = l.scrollHeight; }, 1200);
+    }
+
+    async function architectProtocol() {
+      const i = document.getElementById('kinetic-input'); const r = document.getElementById('kinetic-result'); if(!i.value) return;
+      document.getElementById('kinetic-loader').classList.remove('hidden');
+      setTimeout(() => { r.innerText = "Protocol Synthesized: 1. Release jaw tension. 2. 60-second shoulder retraction. 3. Alpha-rhythm neck rotation."; document.getElementById('kinetic-loader').classList.add('hidden'); }, 1500);
+    }
+
+    function recordMood(v) { moodHistory.shift(); moodHistory.push(v); localStorage.setItem('mb_mood', JSON.stringify(moodHistory)); streakValue++; renderMoodGraph(); notif("Mood Baseline Updated"); }
+    function newAffirmation() { const a = ["Stability is power.", "Breathe into clarity.", "Cognitive peak achieved.", "Neural calm is active."]; document.getElementById('affirmation-txt').innerText = `"${a[Math.floor(Math.random()*a.length)]}"`; }
+
+    let mChart;
+    function renderMoodGraph() {
+      const ctx = document.getElementById('moodGraph'); if(!ctx) return;
+      if(mChart) mChart.destroy();
+      mChart = new Chart(ctx, { type: 'line', data: { labels: ['S','M','T','W','T','F','S'], datasets: [{ data: moodHistory, borderColor: '#a855f7', borderWidth: 4, tension: 0.5, pointRadius: 0, fill: true, backgroundColor: 'rgba(168, 85, 246, 0.1)' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false, min: 1, max: 5 } } } });
+    }
+
+    window.addEventListener('load', () => {
+      init3D(); renderSpecialists(); renderMoodGraph();
+      setInterval(() => {
+        const l = document.getElementById('breath-label'), t = document.getElementById('breath-timer');
+        if(!l || !t) return;
+        l.innerText = phases[phase].t; l.style.color = phases[phase].c; t.innerText = `${countdown}s`;
+        countdown--; if(countdown < 0){ phase = (phase + 1) % 4; countdown = 4; }
+      }, 1000);
+      window.addEventListener('scroll', () => { const h = document.documentElement.scrollHeight - window.innerHeight; document.getElementById('scrollBar').style.width = (window.scrollY / h * 100) + "%"; });
+      const savedId = localStorage.getItem('mb_user_id'); if(savedId){ document.getElementById('nav-sync-text').innerText = savedId; }
+    });
+  </script>
+</body>
+</html>
